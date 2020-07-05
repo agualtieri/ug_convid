@@ -201,7 +201,7 @@ d.f <- d.f %>% mutate(projects_activities = str_replace(projects_activities, "no
 
 
 
-#Concatenated donors per project
+# Concatenated donors per project
 donors <- d.f %>%  select(B.projects.foreign_donor:B.projects.other_donor, donor_internal_funds)
 d.f$donors <-  apply(donors, 1, function(x) paste(na.omit(x),collapse=", ") )
 
@@ -234,7 +234,6 @@ d.f$districts <-  apply(districts, 1, function(x) paste(na.omit(x),collapse=", "
 #concatenate implimenting partners
 implimenting_partner <- d.f %>%  select(contains("implimenting"))
 d.f$implimenting_partner <-  apply(implimenting_partner, 1, function(x) paste(na.omit(x),collapse=", ") ) 
-
 
 
 
@@ -409,7 +408,7 @@ Project_ids <- df %>%  select(project_id,projects_uID) %>%
 
 sel_mul <- butteR::auto_detect_select_multiple(df)
 
-df_mul_col <- df %>% select(project_id,contains(sel_mul)) %>% select_if(is.numeric)
+df_mul_col <- df %>% select(project_id, contains(sel_mul)) %>% select_if(is.numeric)
 
 
 aggreg_to <- df_mul_col %>%  select(everything(),- project_id) %>% colnames()

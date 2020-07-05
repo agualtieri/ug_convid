@@ -9,17 +9,17 @@ colClean <- function(x){ colnames(x) <- gsub("A.", "", colnames(x)); x }
 df <- colClean(df)
 
 
-names(df)[names(df) == "B.projects.district_activity_area"] <- "B.projects.district_activity_area_acholi"
-names(df)[names(df) == "B.projects.b1.district_coordination"] <- "B.projects.b1.district_coordination_acholi"
-names(df)[names(df) == "B.projects.b3.district_surveillance"] <- "B.projects.b3.district_surveillance_acholi"
-names(df)[names(df) == "B.projects.b4.district_case_management"] <- "B.projects.b4.district_case_management_acholi"
-names(df)[names(df) == "B.projects.b5.district_WASH"] <- "B.projects.b5.district_WASH_acholi"
-names(df)[names(df) == "B.projects.b6.district_ict_innovation"] <- "B.projects.b6.district_ict_innovation_acholi"
-names(df)[names(df) == "B.projects.b7.district_mental_health_psychosocial_support"] <- "B.projects.b7.district_mental_health_psychosocial_support_acholi"
-names(df)[names(df) == "B.projects.b8.district_risk_communication"] <- "B.projects.b8.district_risk_communication_acholi"
-names(df)[names(df) == "B.projects.b10.district_human_resources"] <- "B.projects.b10.district_human_resources_acholi"
-names(df)[names(df) == "B.projects.b2.district_infection_prevention"] <- "B.projects.b2.district_infection_prevention_acholi"
-names(df)[names(df) == "B.projects.b9.district_logistics"] <- "B.projects.b9.district_logistics_acholi"
+names(df)[names(df) == "district_activity_area"] <- "district_activity_area_acholi"
+names(df)[names(df) == "district_coordination"] <- "district_coordination_acholi"
+names(df)[names(df) == "district_surveillance"] <- "district_surveillance_acholi"
+names(df)[names(df) == "district_case_management"] <- "district_case_management_acholi"
+names(df)[names(df) == "district_WASH"] <- "district_WASH_acholi"
+names(df)[names(df) == "district_ict_innovation"] <- "district_ict_innovation_acholi"
+names(df)[names(df) == "district_mental_health_psychosocial_support"] <- "district_mental_health_psychosocial_support_acholi"
+names(df)[names(df) == "district_risk_communication"] <- "district_risk_communication_acholi"
+names(df)[names(df) == "district_human_resources"] <- "district_human_resources_acholi"
+names(df)[names(df) == "district_infection_prevention"] <- "district_infection_prevention_acholi"
+names(df)[names(df) == "district_logistics"] <- "district_logistics_acholi"
 
 
 

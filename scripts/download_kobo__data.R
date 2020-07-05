@@ -1,16 +1,16 @@
+## Uganda 4W Dashboard - Data Cleaning and Formatting
+## Last modified 29/06/2020
+
 library(koboloadeR)
 library(dplyr)
 library(stringr)
-source("scripts/keys.R")
+source("scripts/keys.R") ## this script is missing
 
 
 
-
-# MONTHLY INPUT - ONLY PART OF SCRIPT WHICH SHOULD REALLY BE UPDATED ------
-
+# MONTHLY INPUT - ONLY PART OF SCRIPT WHICH SHOULD REALLY BE UPDATED
 output_final_folder<-"inputs/raw_data"
 assessment_year_month<-"2020_02"
-
 
 
 
@@ -22,15 +22,11 @@ df <- kobo_data_downloader(formid = 521177,user =  c(keys[1],keys[2]), api="kobo
 
 
 
-# THIS SHOULD NOT CHANGE --------------------------------------------------
-
+# THIS SHOULD NOT CHANGE
 filename_short<-paste0(assessment_year_month,"_New_Settlements_in_Kobo_Data.csv")
-
-
-
 feb_files <- list(feb_38b,feb_38a,feb_38)
-#combine the feb datasets
 
+# combine the feb datasets
 aok_data <- bind_rows(feb_files,.id = NULL)
 
 
