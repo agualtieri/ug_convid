@@ -38,6 +38,7 @@ activities <- Filter(function(x)!all(is.na(x) ), activities)
 ## Join orgs and activities
 df <- left_join(orgs,activities, by = c("_index" = "_parent_index"))
 
+
 ## Delete test UUIDs
 test_uuid <- c("54079d36-3bdd-415b-b38e-ebd1ac28419e","8f264159-abb4-4f3b-9a3a-b0d552c221af",
                "d47712cc-2705-458c-b115-ecb4e7721e29","8d4ebeb3-a5de-4a26-9958-14b95e6b8b60",
@@ -106,16 +107,16 @@ df_update <-purrr::reduce(analysis_df_list, left_join)
 
 ## Pillars list
 df_update$coordination <- "NA"
-df_update$coordination[df_update$coordination != "none"] <- "coordination"
+df_update$coordination[df_update$coordination != "none"] <- "Coordination"
 
 df_update$infection_prevention <- "NA"
-df_update$infection_prevention[df_update$infection_prevention != "none"] <- "infection prevention"
+df_update$infection_prevention[df_update$infection_prevention != "none"] <- "Infection prevention"
 
 df_update$surveillance <- "NA"
-df_update$surveillance[df_update$surveillance != "none"] <- "surveillance"
+df_update$surveillance[df_update$surveillance != "none"] <- "Surveillance"
 
 df_update$case_management <- "NA"
-df_update$case_management[df_update$case_management != "none"] <- "case management"
+df_update$case_management[df_update$case_management != "none"] <- "Case management"
 
 df_update$wash <- "NA"
 df_update$wash[df_update$WH != "none"] <- "WASH"
@@ -140,7 +141,7 @@ trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
 df_update$pillars <- paste(df_update$coordination, df_update$infection_prevention, df_update$surveillance, df_update$case_management,
                            df_update$wash, df_update$ict_innovations, df_update$mental_health, df_update$risk_communications,
-                           df_update$logistics, df_update$human_resources, sep = ", ")
+                           df_update$logistics, df_update$human_resources, sep = ",")
 
 
 df_update <- df_update %>% mutate(pillars = str_remove_all(pillars,"NA,")) %>% mutate(pillars = str_remove_all(pillars,",NA")) %>% 
@@ -851,7 +852,7 @@ ug_regions <-  admin_info %>%  filter(list_name == "region_list") %>%  select(na
 
 
 ## Factsheets data merge
-analysis_df_list<-list(region_coodination_actors,region_infe_actors,region_survey_actors,region_case_actorss,region_WH_actors,region_ict_actors,
+analysis_df_list<-list(region_coodination_actors,region_infe_actors,region_survey_actors,region_case_actors,region_WH_actors,region_ict_actors,
                        region_risk_actors,region_mental_actors,region_logs_actors,region_hr_actors)
 
 region_factsheets <-purrr::reduce(analysis_df_list, left_join)
