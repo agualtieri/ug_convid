@@ -18,7 +18,7 @@ library(clog)
 
 
 ## Load data and clean headers
-lst <- lapply(1:2, function(i) read_excel("inputs/Uganda Ministry of Health COVID-19 Response Activity and Resource Mapping - all versions - False - 2020-06-30-07-17-46.xlsx", 
+lst <- lapply(1:2, function(i) read_excel("inputs/Uganda_Ministry_of_Health_COVID-19_Response_Activity_and_Resource_Mapping_-_all_versions_-_False_-_2020-07-14-12-56-01.xlsx", 
                                           sheet = i))
 orgs <- lst[[1]]
 activities <- lst[[2]]
@@ -63,11 +63,13 @@ df$projects_uID <- paste0("ID-",df$project_id)
 
 ## Save file to proceed with data cleaning
 write.xlsx(df, paste0("./outputs/UG_4W COVID_for data cleaning_",today,".xlsx"))
+read.xlsx(paste0("./outputs/UG_4W COVID_for data cleaning_",today,".xlsx"))
 
 
 ## Cleaning using cleaning log
 ## Load cleaning log
-cleaning_log <- read.xlsx("./inputs/ULEARN_4Ws matrix_cleaning_log_AN_V3.xlsx")
+cleaning_log <- read.xlsx("./inputs/ULEARN_4Ws matrix_cleaning_log_AN_V4.xlsx")
+cleaning_log_num <- read.xlsx("./inputs/ULEARN_4Ws matrix_cleaning_log_AN_V3.xlsx")
 
 
 #df_id <- df$projects_uID
@@ -83,11 +85,23 @@ my_cleaninglog <- cleaninglog(ids = cleaning_log$uuid,
 
 df <- clog_clean(df, my_cleaninglog)
 
+my_cleaninglog_num <- cleaninglog(ids = cleaning_log_num$uuid,
+                              variables = cleaning_log_num$indicator,
+                              new_values = cleaning_log_num$new_value,
+                              name = cleaning_log_num$change_type,
+                              change = cleaning_log_num$edit,
+                              data_id_column_name = "projects_uID")
+
+
+df <- clog_clean(df, my_cleaninglog_num)
+
+
+
 
 ## Overview by partner
 ## We need the internal funding as we will add as part of the donor list
-df$donor_internal_funds < "NA"
-df$donor_internal_funds[df$donor.internal_funds == 1] <- "internal_funding"
+df$donor_internal_funds <- "NA"
+df$donor_internal_funds[df$donor.internal_funds == 1] <- "Internal Funding"
 
 ## After recoding we are able to remove the integer individual select columns from the dataset as this is just a summary
 df_text <- df %>% select_if(is.character)
@@ -104,44 +118,43 @@ analysis_df_list<-list(Org_contact,df_text_projects)
 
 df_update <-purrr::reduce(analysis_df_list, left_join)
 
-
 ## Pillars list
-df_update$coordination <- "NA"
-df_update$coordination[df_update$coordination != "none"] <- "Coordination"
+df_update$coordination1 <- "NA"
+df_update$coordination1[df_update$coordination != "none"] <- "Coordination"
 
-df_update$infection_prevention <- "NA"
-df_update$infection_prevention[df_update$infection_prevention != "none"] <- "Infection prevention"
+df_update$infection_prevention1 <- "NA"
+df_update$infection_prevention1[df_update$infection_prevention != "none"] <- "Infection prevention"
 
-df_update$surveillance <- "NA"
-df_update$surveillance[df_update$surveillance != "none"] <- "Surveillance"
+df_update$surveillance1 <- "NA"
+df_update$surveillance1[df_update$surveillance != "none"] <- "Surveillance"
 
-df_update$case_management <- "NA"
-df_update$case_management[df_update$case_management != "none"] <- "Case management"
+df_update$case_management1 <- "NA"
+df_update$case_management1[df_update$case_management != "none"] <- "Case management"
 
-df_update$wash <- "NA"
-df_update$wash[df_update$WH != "none"] <- "WASH"
+df_update$wash1 <- "NA"
+df_update$wash1[df_update$WH != "none"] <- "WASH"
 
-df_update$ict_innovations <- "NA"
-df_update$ict_innovations[df_update$ict_innovation != "none"] <- "ICT innovations"
+df_update$ict_innovations1 <- "NA"
+df_update$ict_innovations1[df_update$ict_innovation != "none"] <- "ICT innovations"
 
-df_update$mental_health <- "NA"
-df_update$mental_health[df_update$mental_health_psychosocial_support != "none"] <- "Mental health"
+df_update$mental_health1 <- "NA"
+df_update$mental_health1[df_update$mental_health_psychosocial_support != "none"] <- "Mental health"
 
-df_update$risk_communications <- "NA"
-df_update$risk_communications[df_update$risk_communication != "none"] <- "Risk communications"
+df_update$risk_communications1 <- "NA"
+df_update$risk_communications1[df_update$risk_communication != "none"] <- "Risk communications"
 
-df_update$logistics <- "NA"
-df_update$logistics[df_update$logistics != "none"] <- "Logistics"
+df_update$logistics1 <- "NA"
+df_update$logistics1[df_update$logistics != "none"] <- "Logistics"
 
-df_update$human_resources <- "NA"
-df_update$human_resources[df_update$human_resources != "none"] <- "Human resource"
+df_update$human_resources1 <- "NA"
+df_update$human_resources1[df_update$human_resources != "none"] <- "Human resources"
 
 ## Concatenated covered pillars per project
 trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
-df_update$pillars <- paste(df_update$coordination, df_update$infection_prevention, df_update$surveillance, df_update$case_management,
-                           df_update$wash, df_update$ict_innovations, df_update$mental_health, df_update$risk_communications,
-                           df_update$logistics, df_update$human_resources, sep = ",")
+df_update$pillars <- paste(df_update$coordination1, df_update$infection_prevention1, df_update$surveillance1, df_update$case_management1,
+                           df_update$wash1, df_update$ict_innovations1, df_update$mental_health1, df_update$risk_communications1,
+                           df_update$logistics1, df_update$human_resources1, sep = ",")
 
 
 df_update <- df_update %>% mutate(pillars = str_remove_all(pillars,"NA,")) %>% mutate(pillars = str_remove_all(pillars,",NA")) %>% 
@@ -162,7 +175,7 @@ df_update$donors <- sapply(strsplit(df_update$donors, ",", fixed = TRUE), functi
   paste(unique(x), collapse = ",")) 
 
 df_update <- df_update %>% mutate(donors = str_remove_all(donors,",other")) %>% 
-  mutate(donors = str_remove_all(donors,"other,"))
+  mutate(donors = str_remove_all(donors,"other,")) %>% mutate(donors = str_remove_all(donors,"NA,")) %>% mutate(donors = str_remove_all(donors,", NA"))
 
 df_update$donors <- trim(df_update$donors)
 
@@ -188,7 +201,6 @@ df_update$implimenting_partner <-  apply(implimenting_partner, 1, function(x) pa
 
 
 # Concatenated activities per project
-df_update$projects_activities <- "NA"
 df_update$projects_activities <- paste(df_update$coordination,
                                        df_update$infection_prevention,
                                        df_update$surveillance,
@@ -202,8 +214,10 @@ df_update$projects_activities <- paste(df_update$coordination,
                                        sep = ", ")
 
 
-df_update <- df_update %>% mutate(projects_activities = str_replace(projects_activities, "none", "other")) %>% 
-  mutate(projects_activities = str_remove_all(projects_activities,"NA,")) %>% mutate(projects_activities = str_remove_all(projects_activities,",NA"))
+df_update <- df_update %>% mutate(projects_activities = str_remove_all(projects_activities,"NA,")) %>% 
+                           mutate(projects_activities = str_remove_all(projects_activities,",NA"))
+
+df_update$projects_activities <- trim(df_update$projects_activities)
 
 
 ## Final Output (I guess)
@@ -228,69 +242,69 @@ write.csv(df_update, paste0("outputs/UG_convid_matrix_",today,".csv",na = ""))
 ## Pillars detail
 
 ## List of pillars
-df$coordination <- 0
-df$coordination[df$coordination != "none"] <- 1
+df$coordination1 <- 0
+df$coordination1[df$coordination != "none"] <- 1
 
-df$infection_prevention <- 0
-df$infection_prevention[df$infection_prevention != "none"] <- 1
+df$infection_prevention1 <- 0
+df$infection_prevention1[df$infection_prevention != "none"] <- 1
 
-df$surveillance <- 0
-df$surveillance[df$surveillance != "none"] <- 1
+df$surveillance1 <- 0
+df$surveillance1[df$surveillance != "none"] <- 1
 
-df$case_management <- 0
-df$case_management[df$case_management != "none"] <- 1
+df$case_management1 <- 0
+df$case_management1[df$case_management != "none"] <- 1
 
-df$wash <- 0
-df$wash[df$WH != "none"] <- 1
+df$wash1 <- 0
+df$wash1[df$WH != "none"] <- 1
 
-df$ict_innovations <- 0
-df$ict_innovations[df$ict_innovation != "none"] <- 1
+df$ict_innovations1 <- 0
+df$ict_innovations1[df$ict_innovation != "none"] <- 1
 
-df$mental_health <- 0
-df$mental_health[df$mental_health_psychosocial_support != "none"] <- 1
+df$mental_health1 <- 0
+df$mental_health1[df$mental_health_psychosocial_support != "none"] <- 1
 
-df$risk_communications <- 0
-df$risk_communications[df$risk_communication != "none"] <- 1
+df$risk_communications1 <- 0
+df$risk_communications1[df$risk_communication != "none"] <- 1
 
-df$logistics <- 0
-df$logistics[df$logistics != "none"] <- 1
+df$logistics1 <- 0
+df$logistics1[df$logistics != "none"] <- 1
 
-df$human_resources <- 0
-df$human_resources[df$human_resources != "none"] <- 1
+df$human_resources1 <- 0
+df$human_resources1[df$human_resources != "none"] <- 1
 
 
 
-coord_activities_columns <- df %>%  select(contains("coordination."), - contains("none")) 
-coord_activities <- df %>%  select(projects_uID,name_agency, coordination ,contains("coordination."), - contains("none")) %>% mutate(coord_activities_num = rowSums(coord_activities_columns, na.rm = TRUE))
+coord_activities_columns <- df %>%  select(contains("coordination."), -contains("none")) 
+coord_activities <- df %>%  select(projects_uID,name_agency, coordination1 ,contains("coordination."), -contains("none")) %>% mutate(coord_activities_num = rowSums(coord_activities_columns, na.rm = TRUE))
 
 infe_activities_columns <- df %>%  select(contains("infection_prevention."), - contains("none")) 
-infe_activities <-df %>%  select(projects_uID,name_agency,infection_prevention ,contains("infection_prevention."), - contains("none")) %>% mutate( infeactivities_num = rowSums(infe_activities_columns, na.rm = TRUE))
+infe_activities <-df %>%  select(projects_uID,name_agency,infection_prevention1 ,contains("infection_prevention."), - contains("none")) %>% mutate( infeactivities_num = rowSums(infe_activities_columns, na.rm = TRUE))
 
 surveilance_activities_columns <- df %>%  select(contains("surveillance."), - contains("none")) 
-surveilance_activities <-df %>%  select(projects_uID,name_agency,surveillance ,contains("surveillance."), - contains("none")) %>% mutate( surve_activities_num = rowSums(surveilance_activities_columns, na.rm = TRUE))
+surveilance_activities <-df %>%  select(projects_uID,name_agency,surveillance1 ,contains("surveillance."), - contains("none")) %>% mutate( surve_activities_num = rowSums(surveilance_activities_columns, na.rm = TRUE))
 
 casemanagement_activities_columns <- df %>%  select(contains("case_management."), - contains("none")) 
-casemanagement_activities <-df %>%  select(projects_uID,name_agency,case_management ,contains("case_management."), - contains("none")) %>% mutate( case_activities_num = rowSums(casemanagement_activities_columns, na.rm = TRUE))
+casemanagement_activities <-df %>%  select(projects_uID,name_agency,case_management1 ,contains("case_management."), - contains("none")) %>% mutate( case_activities_num = rowSums(casemanagement_activities_columns, na.rm = TRUE))
 
 WASH_activities_columns <- df %>%  select(contains("WH."), - contains("none")) 
-WASH_activities <-df %>%  select(projects_uID,name_agency, wash ,contains("WH."), - contains("none")) %>% mutate( WASH_activities_num = rowSums(WASH_activities_columns, na.rm = TRUE))
+WASH_activities <-df %>%  select(projects_uID,name_agency, wash1 ,contains("WH."), - contains("none")) %>% mutate( WASH_activities_num = rowSums(WASH_activities_columns, na.rm = TRUE))
 
 
 ict_columns <- df %>%  select(contains("ict_innovation."), - contains("none")) 
-ict_activities <-df %>%  select(projects_uID,name_agency,ict_innovations ,contains("ict_innovation."), - contains("none")) %>% mutate( ict_activities_num = rowSums(ict_columns, na.rm = TRUE))
+ict_activities <-df %>%  select(projects_uID,name_agency,ict_innovations1 ,contains("ict_innovation."), - contains("none")) %>% mutate( ict_activities_num = rowSums(ict_columns, na.rm = TRUE))
 
 mental_activities_columns <- df %>%  select(contains("mental_health_psychosocial_support."), - contains("none")) 
-mental_activities <-df %>%  select(projects_uID,name_agency,mental_health ,contains("mental_health_psychosocial_support."), - contains("none")) %>% mutate( mental_health_activities_num = rowSums(mental_activities_columns, na.rm = TRUE))
+mental_activities <-df %>%  select(projects_uID,name_agency,mental_health1 ,contains("mental_health_psychosocial_support."), - contains("none")) %>% mutate( mental_health_activities_num = rowSums(mental_activities_columns, na.rm = TRUE))
 
 
 risk_activities_columns <- df %>%  select(contains("risk_communication."), - contains("none")) 
-risk_activities <-df %>%  select(projects_uID,name_agency,risk_communications ,contains("risk_communication."), - contains("none")) %>% mutate( risk_activities_num = rowSums(risk_activities_columns, na.rm = TRUE))
+risk_activities <-df %>%  select(projects_uID,name_agency,risk_communications1 ,contains("risk_communication."), - contains("none")) %>% mutate( risk_activities_num = rowSums(risk_activities_columns, na.rm = TRUE))
 
 logistics_activities_columns <- df %>%  select(contains("logistics."), - contains("none")) 
-logistics_activities <-df %>%  select(projects_uID,name_agency,logistics ,contains("logistics."), - contains("none")) %>% mutate( logistics_activities_num = rowSums(logistics_activities_columns, na.rm = TRUE))
+logistics_activities <-df %>%  select(projects_uID,name_agency,logistics1 ,contains("logistics."), - contains("none")) %>% mutate( logistics_activities_num = rowSums(logistics_activities_columns, na.rm = TRUE))
 
 HR_activities_columns <- df %>%  select(contains("human_resources."), - contains("none")) 
-HR_activities <-df %>%  select(projects_uID,name_agency,human_resources ,contains("human_resources."), - contains("none")) %>% mutate( HR_activities_num = rowSums(HR_activities_columns, na.rm = TRUE))
+HR_activities <-df %>%  select(projects_uID,name_agency,human_resources1 ,contains("human_resources."), - contains("none")) %>% mutate( HR_activities_num = rowSums(HR_activities_columns, na.rm = TRUE))
 
 ## Support form
 support_form_actors <- df %>% select(ongoing_ability, new_project_funding, name_agency, coordination_support_cash_amount, 
@@ -316,8 +330,8 @@ projects_activities <-purrr::reduce(analysis_df_list, left_join)
 
 
 actors_pillar_activity <- projects_activities %>%  
-  select(name_agency, coordination, infection_prevention, surveillance, case_management, wash,
-         ict_innovations, mental_health,	risk_communications,	logistics,	human_resources, coordination_support_cash_amount, 
+  select(name_agency, coordination1, infection_prevention1, surveillance1, case_management1, wash1,
+         ict_innovations1, mental_health1,	risk_communications1,	logistics1,	human_resources1, coordination_support_cash_amount, 
          coordination_support_supplies_amount,
          infection_support_cash_amount, infection_support_supplies_amount,
          surveillance_support_supplies_amount,
@@ -403,8 +417,8 @@ district_coord_activities <-purrr::reduce(analysis_df_list, left_join)
 district_coord_activities <- district_coord_activities %>%  
                              mutate(region = ifelse(is.na(coord_regions),area_regions,coord_regions),
                              district =  ifelse(is.na(coord_districts),area_districts,coord_districts)) %>% 
-                             filter(coordination == 1 & !is.na(district) ) %>%  
-                             select(projects_uID,region,district,coordination :coord_activities_num)
+                             filter(coordination1 == 1 & !is.na(district) ) %>%  
+                             select(projects_uID,region,district,coordination1 :coord_activities_num)
 
 
 
@@ -451,7 +465,7 @@ district_infe_activities <-purrr::reduce(analysis_df_list, left_join)
 district_infe_activities <- district_infe_activities %>%  
   mutate(region = ifelse(is.na(infection_prevention_regions),area_regions,infection_prevention_regions),
          district =  ifelse(is.na(infection_prevention_districts),area_districts,infection_prevention_districts)) %>% 
-  filter(infection_prevention == 1 & !is.na(district)  ) %>%  select(region,district,infection_prevention:infection_support_supplies_amount)
+  filter(infection_prevention1 == 1 & !is.na(district)  ) %>%  select(region,district,infection_prevention1:infection_support_supplies_amount)
 
 
 list <-list(district_infe_activities,actor_project_id)
@@ -498,7 +512,7 @@ district_surve_activities <-purrr::reduce(analysis_df_list, left_join)
 district_surve_activities <- district_surve_activities %>%  
   mutate(region = ifelse(is.na(surveilance_regions),area_regions,surveilance_regions),
          district =  ifelse(is.na(surveilance_districts),area_districts,surveilance_districts)) %>% 
-  filter(surveillance == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,surveillance:surveillance_support_supplies_amount)
+  filter(surveillance1 == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,surveillance1:surveillance_support_supplies_amount)
 
 list <-list(district_surve_activities,actor_project_id)
 
@@ -543,7 +557,7 @@ district_case_activities <-purrr::reduce(analysis_df_list, left_join)
 district_case_activities <- district_case_activities %>%  
   mutate(region = ifelse(is.na(case_management_regions),area_regions,case_management_regions),
          district =  ifelse(is.na(case_mangement_districts),area_districts,case_mangement_districts)) %>% 
-  filter(case_management == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,case_management:case_management_support_supplies_amount)
+  filter(case_management1 == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,case_management1:case_management_support_supplies_amount)
 
 list <-list(district_case_activities,actor_project_id)
 
@@ -588,7 +602,7 @@ district_WH_activities <-purrr::reduce(analysis_df_list, left_join)
 district_WH_activities <- district_WH_activities %>%  
   mutate(region = ifelse(is.na(WH_regions),area_regions,WH_regions),
          district =  ifelse(is.na(WH_districts),area_districts,WH_districts)) %>% 
-  filter(wash == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,wash:wash_support_supplies_amount)
+  filter(wash1 == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,wash1:wash_support_supplies_amount)
 
 list <-list(district_WH_activities,actor_project_id)
 
@@ -632,7 +646,7 @@ district_ict_activities <-purrr::reduce(analysis_df_list, left_join)
 district_ict_activities <- district_ict_activities %>%  
   mutate(region = ifelse(is.na(ict_regions),area_regions,ict_regions),
          district =  ifelse(is.na(ict_districts),area_districts,ict_districts)) %>% 
-  filter(ict_innovations == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,ict_innovations:ict_support_cash_amount)
+  filter(ict_innovations1 == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,ict_innovations1:ict_support_cash_amount)
 
 
 list <-list(district_ict_activities,actor_project_id)
@@ -679,7 +693,7 @@ district_mental_activities <-purrr::reduce(analysis_df_list, left_join)
 district_mental_activities <- district_mental_activities %>%  
   mutate(region = ifelse(is.na(mental_regions),area_regions,mental_regions),
          district =  ifelse(is.na(mental_districts),area_districts,mental_districts)) %>% 
-  filter(mental_health == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,mental_health:mental_health_support_supplies_amount)
+  filter(mental_health1 == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,mental_health1:mental_health_support_supplies_amount)
 
 list <-list(district_mental_activities,actor_project_id)
 
@@ -724,7 +738,7 @@ district_risk_activities <-purrr::reduce(analysis_df_list, left_join)
 district_risk_activities <- district_risk_activities %>%  
   mutate(region = ifelse(is.na(risk_comm_regions),area_regions,risk_comm_regions),
          district =  ifelse(is.na(risk_comm_districts),area_districts,risk_comm_districts)) %>% 
-  filter(risk_communications == 1 & !is.na(district)  ) %>%  select(projects_uID,region, district,risk_communications:risk_comms_support_supplies_amount)
+  filter(risk_communications1 == 1 & !is.na(district)  ) %>%  select(projects_uID,region, district,risk_communications1:risk_comms_support_supplies_amount)
 
 
 list <-list(district_risk_activities,actor_project_id)
@@ -770,7 +784,7 @@ district_logs_activities <-purrr::reduce(analysis_df_list, left_join)
 district_logs_activities <- district_logs_activities %>%  
   mutate(region = ifelse(is.na(logs_regions),area_regions,logs_regions),
          district =  ifelse(is.na(logs_districts),area_districts,logs_districts)) %>% 
-  filter(logistics == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,logistics:logs_support_supplies_amount)
+  filter(logistics1 == 1 & !is.na(district)  ) %>%  select(projects_uID,region,district,logistics1:logs_support_supplies_amount)
 
 
 list <-list(district_logs_activities,actor_project_id)
@@ -816,7 +830,7 @@ district_hr_activities <-purrr::reduce(analysis_df_list, left_join)
 district_hr_activities <- district_hr_activities %>%  
   mutate(region = ifelse(is.na(HR_regions),area_regions,HR_regions),
          district =  ifelse(is.na(HR_districts),area_districts,HR_districts)) %>% 
-  filter(human_resources == 1 & !is.na(district)) %>%  select(projects_uID,region,district,human_resources:human_resources_support_cash_amount)
+  filter(human_resources1 == 1 & !is.na(district)) %>%  select(projects_uID,region,district,human_resources1:human_resources_support_cash_amount)
 
 
 list <-list(district_hr_activities,actor_project_id)
@@ -890,7 +904,7 @@ region_donors_count <- region_donors[,2:4]
 region_donors_count <- region_donors_count %>% group_by(region) %>% summarise(donors_count = n_distinct(indicator_val))
 
 ## Coordination actor district
-coodination_actors <- actors_districts %>% filter(coordination == 1) %>% select(region, district, name_agency)
+coodination_actors <- actors_districts %>% filter(coordination1 == 1) %>% select(region, district, name_agency)
 
 
 region_coodination_districts <- coodination_actors %>% group_by(region) %>% 
@@ -910,7 +924,7 @@ num_total_coord_actors <- num_coodination_actors %>%  summarise(num_total_cord_a
 num_cord_districts <- coodination_actors %>% group_by(region) %>% summarise(num_cord_districts = n_distinct(district))
 
 ## Infection disease actors
-infection_actors <- actors_districts %>% filter(infection_prevention == 1) %>% select(region,district,name_agency)
+infection_actors <- actors_districts %>% filter(infection_prevention1 == 1) %>% select(region,district,name_agency)
 
 region_infe_districts <- infection_actors %>% group_by(region) %>% 
   summarize(infection_districts = paste(sort(unique(district)),collapse=", "))
@@ -923,7 +937,7 @@ region_infe_actors <-infection_actors %>% group_by(region) %>%
 num_infe_districts <- infection_actors %>% group_by(region) %>% summarise(num_infe_districts = n_distinct(district))
 
 ## Surveillance actors
-survey_actors <- actors_districts %>% filter(surveillance == 1) %>% select(region,district,name_agency)
+survey_actors <- actors_districts %>% filter(surveillance1 == 1) %>% select(region,district,name_agency)
 
 
 region_sur_districts <-survey_actors %>% group_by(region) %>% 
@@ -937,7 +951,7 @@ region_sur_actors <-survey_actors %>% group_by(region) %>%
 num_survey_districts <- survey_actors %>% group_by(region) %>% summarise(num_survey_districts = n_distinct(district))
 
 ## Case management actors
-case_actors <- actors_districts %>% filter(case_management == 1) %>% select(region,district,name_agency)
+case_actors <- actors_districts %>% filter(case_management1 == 1) %>% select(region,district,name_agency)
 
 region_case_districts <-case_actors %>% group_by(region) %>% 
   summarize(case_districts = paste(sort(unique(district)),collapse=", "))
@@ -950,7 +964,7 @@ num_case_districts <- case_actors %>% group_by(region) %>% summarise(num_case_di
 
 
 ## WASH actors
-WH_actors <- actors_districts %>% filter(wash == 1) %>% select(region,district,name_agency)
+WH_actors <- actors_districts %>% filter(wash1 == 1) %>% select(region,district,name_agency)
 
 region_WH_districts <-WH_actors %>% group_by(region) %>% 
   summarize(wh_districts = paste(sort(unique(district)),collapse=", "))
@@ -963,7 +977,7 @@ region_WH_actors <-WH_actors %>% group_by(region) %>%
 num_WH_districts <- WH_actors %>% group_by(region) %>% summarise(num_wh_districts = n_distinct(district))
 
 ## ICT actors
-ict_actors <- actors_districts %>% filter(ict_innovations == 1) %>% select(region,district,name_agency)
+ict_actors <- actors_districts %>% filter(ict_innovations1 == 1) %>% select(region,district,name_agency)
 
 region_ict_districts <-ict_actors %>% group_by(region) %>% 
   summarize(ict_districts = paste(sort(unique(district)),collapse=", "))
@@ -977,7 +991,7 @@ num_ict_districts <- ict_actors %>% group_by(region) %>% summarise(ict_wh_distri
 
 
 ## Risk communications actors
-risk_actors <- actors_districts %>% filter(risk_communications == 1) %>% select(region,district,name_agency)
+risk_actors <- actors_districts %>% filter(risk_communications1 == 1) %>% select(region,district,name_agency)
 
 region_risk_districts <-district_risk_activities %>% group_by(region) %>% 
   summarize(risk_districts = paste(sort(unique(district)),collapse=", "))
@@ -990,7 +1004,7 @@ num_risk_districts <- district_risk_activities %>% group_by(region) %>% summaris
 
 
 ## Mental health actors
-mental_actors <- actors_districts %>% filter(mental_health == 1) %>% select(region,district,name_agency)
+mental_actors <- actors_districts %>% filter(mental_health1 == 1) %>% select(region,district,name_agency)
 
 region_mental_districts <-mental_actors %>% group_by(region) %>% 
   summarize(mental_districts = paste(sort(unique(district)),collapse=", "))
@@ -1002,7 +1016,7 @@ region_mental_actors <-mental_actors %>% group_by(region) %>%
 num_mental_districts <- mental_actors %>% group_by(region) %>% summarise(num_mental_districts = n_distinct(district))
 
 ## Logistics actors
-logs_actors <- actors_districts %>% filter(logistics == 1) %>% select(region,district,name_agency)
+logs_actors <- actors_districts %>% filter(logistics1 == 1) %>% select(region,district,name_agency)
 
 region_logs_districts <-logs_actors %>% group_by(region) %>% 
   summarize(logs_districts = paste(sort(unique(district)),collapse=", "))
@@ -1015,7 +1029,7 @@ num_logs_districts <- logs_actors %>% group_by(region) %>% summarise(num_logs_di
 
 
 ## HR actors
-hr_actors <- actors_districts %>% filter(human_resources == 1) %>% select(region,district,name_agency)
+hr_actors <- actors_districts %>% filter(human_resources1 == 1) %>% select(region,district,name_agency)
 
 region_hr_districts <-hr_actors %>% group_by(region) %>% 
   summarize(hr_districts = paste(sort(unique(district)),collapse=", "))
