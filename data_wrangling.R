@@ -14,13 +14,16 @@ library(readxl)
 library(cleaner)
 
 
-
 ## Load external scripts
 source("./scripts/moveme.R")
 
-## Load activities and remove unused column and rename column headers
-activities <- read.csv("./outputs/UG_convid_matrix_2020-08-24.csv", stringsAsFactors = F)
+## Load inputs - change path based on the location of the new input
+activities <- read.csv("./outputs/UG_convid_matrix_2020-11-10.csv", stringsAsFactors = FALSE)
+actors <- lapply(5:15, function(i) read_excel("outputs/UG_4W COVID_2020-11-10.xlsx", sheet = i))
 
+
+## Wrangle activities file
+## Load activities and remove unused column and rename column headers
 activities <- activities %>% select(-X, -donors, -ongoing_ability, -new_project_funding, -funding_amount)
 
 names(activities)[names(activities) == "projects_uID"] <- "ProjectID"
@@ -62,7 +65,7 @@ activities$Activities_conducted <- str_trim(activities$Activities_conducted, "bo
 activities$Activities_conducted <- gsub(" ", ", ", activities$Activities_conducted)
 
 ## Split and rename
-activity_labels <- read.xlsx("./inputs/tool/Uganda_ULEARN_4W_Kobo_choices.xlsx")
+activity_labels <- read.xlsx("./inputs/tool/Uganda_ULEARN_4W_Kobo_Choices_Nov2020.xlsx")
 
 test <- str_split_fixed(activities$Activities_conducted, ", ", 20)
 test <- as.data.frame(test)
@@ -109,8 +112,7 @@ activities <- activities[moveme(names(activities), "Activities_conducted2 after 
 write.csv(activities, "./outputs/UGA_COVID_Activities.csv", row.names = FALSE, na= "")
 
 
-## Load actors output
-actors <- lapply(5:14, function(i) read_excel("outputs/UG_4W COVID_2020-08-24.xlsx", sheet = i))
+## Wrangle actors dataset
 
 ## Rename cols
 names(actors[[1]])[names(actors[[1]]) == "actors"] <- "Coordination"
@@ -123,7 +125,10 @@ names(actors[[7]])[names(actors[[7]]) == "actors"] <- "ICTInnovation"
 names(actors[[8]])[names(actors[[8]]) == "actors"] <- "WASH"
 names(actors[[9]])[names(actors[[9]]) == "actors"] <- "Logistics"
 names(actors[[10]])[names(actors[[10]]) == "actors"] <- "HumanResources"
+names(actors[[11]])[names(actors[[11]]) == "actors"] <- "Laboratory"
 
+                          
+                          
 names(actors[[1]])[names(actors[[1]]) == "coordination1"] <- "Coordination_n"
 names(actors[[2]])[names(actors[[2]]) == "infection_prevention1"] <- "PreventionControl_n"
 names(actors[[3]])[names(actors[[3]]) == "surveillance1"] <- "Surveillance_n"
@@ -134,6 +139,7 @@ names(actors[[7]])[names(actors[[7]]) == "ict_innovations1"] <- "ICTInnovation_n
 names(actors[[8]])[names(actors[[8]]) == "wash1"] <- "WASH_n"
 names(actors[[9]])[names(actors[[9]]) == "logistics1"] <- "Logistics_n"
 names(actors[[10]])[names(actors[[10]]) == "human_resources1"] <- "HumanResources_n"
+names(actors[[11]])[names(actors[[11]]) == "laboratory1"] <- "Laboratory_n"
 
 ## Select only the columns that are needed
 get_three <- function(data){data[1:3]}
@@ -218,25 +224,31 @@ huma <- str_split_fixed(actors_df$HumanResources, "\\|", 100) %>%  as.data.frame
 
 actors_df$HumanResources_n <- huma$HumanResources_n
 
+labo <- str_split_fixed(actors_df$Laboratory, "\\|", 100) %>%  as.data.frame() %>% mutate_all(na_if,"") %>% 
+  mutate(Laboratory_n = rowSums(!is.na(.)))
 
+actors_df$Laboratory_n <- labo$Laboratory_n
 
 ## Move stuff around
 actors_df <- actors_df[moveme(names(actors_df), "PreventionControl_n after Coordination_n; 
                                                  Surveillance_n after PreventionControl_n;
                                                  CaseManagement_n after Surveillance_n;
-                                                 RiskCommunication_n after Surveillance_n;
+                                                 RiskCommunication_n after CaseManagement_n;
                                                  MentalHealth_n after RiskCommunication_n;
                                                  ICTInnovation_n after MentalHealth_n;
                                                  WASH_n after ICTInnovation_n;
                                                  Logistics_n after WASH_n;
-                                                 HumanResources_n after Logistics_n")]
+                                                 HumanResources_n after Logistics_n; 
+                                                 Laboratory_n after HumanResources_n")]
+
+actors_df$region <- NULL
 
 ## Replace NA with 0
-cols <- names(actors_df[2:11])
+cols <- names(actors_df[2:12])
 actors_df[,cols] <- apply(actors_df[,cols], 2,            # Specify own function within apply
                     function(x) as.numeric(as.character(x)))
 
-actors_df[2:11][is.na(actors_df[2:11])] <- 0
+actors_df[2:12][is.na(actors_df[2:12])] <- 0
 
 
 ## Save output
